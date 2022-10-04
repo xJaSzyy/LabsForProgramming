@@ -57,42 +57,85 @@ namespace DichotomyMethod
             textBox1.Text = Math.Round((a + b) / 2, 5).ToString();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void найтиМинимумToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //переменные
-            double a = Convert.ToDouble(ValueA.Text);
-            double b = Convert.ToDouble(ValueB.Text);
-            double eps = Convert.ToDouble(ValueE.Text);
-
-            MethodDichotomy(a, b, eps);
+            textBox1.Visible = true;
+            double a, b, eps;
+            if (ValueA.Text == "")
+            {
+                MessageBox.Show("Введите значение интервала <от>");
+            }
+            if (ValueB.Text == "")
+            {
+                MessageBox.Show("Введите значение интервала <до>");
+            }
+            if (ValueA.Text != "" && ValueB.Text != "")
+            {
+                a = Convert.ToDouble(ValueA.Text);
+                b = Convert.ToDouble(ValueB.Text);
+                eps = Convert.ToDouble(ValueE.Text);
+                MethodDichotomy(a, b, eps);
+            }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void построитьГрафикToolStripMenuItem_Click(object sender, EventArgs e)
         {
             chart.Series[0].Points.Clear();
-            double a = Convert.ToDouble(ValueA.Text);
-            double b = Convert.ToDouble(ValueB.Text);
-            double h = Convert.ToDouble(ValueE.Text);
-            double x;
-            x = a;
-            while (x <= b)
+            if (ValueA.Text == "")
             {
-                listNames.Add("x");
-                idsNames = listNames.ToArray();
-                listValues.Add(x);
-                idsValues = listValues.ToArray();
-                string Formula = FormulaField.Text;
-                if (Expression.IsExpression(Formula, idsNames))
+                MessageBox.Show("Введите значение интервала <от>");
+            }
+            if (ValueB.Text == "")
+            {
+                MessageBox.Show("Введите значение интервала <до>");
+            }
+            if (ValueE.Value == 0)
+            {
+                MessageBox.Show("Введите значение шага");
+            }
+            if (ValueA.Text != "" && ValueB.Text != "" && ValueE.Value != 0)
+            {
+                double a = Convert.ToDouble(ValueA.Text);
+                double b = Convert.ToDouble(ValueB.Text);
+                double h = Convert.ToDouble(ValueE.Text);
+
+                double x;
+                x = a;
+                if (FormulaField.Text != "")
                 {
-                    Expression expression = new Expression(Formula, idsNames, null);
-                    double y = expression.CalculateValue(idsValues);
-                    chart.Series[0].Points.AddXY(x, y);
-                    x += h;
-                    listNames.Clear();
-                    listValues.Clear();
+                    while (x <= b)
+                    {
+                        listNames.Add("x");
+                        idsNames = listNames.ToArray();
+                        listValues.Add(x);
+                        idsValues = listValues.ToArray();
+
+                        string Formula = FormulaField.Text;
+                        if (Expression.IsExpression(Formula, idsNames))
+                        {
+                            Expression expression = new Expression(Formula, idsNames, null);
+                            double y = expression.CalculateValue(idsValues);
+                            chart.Series[0].Points.AddXY(x, y);
+                            x += h;
+                            listNames.Clear();
+                            listValues.Clear();
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Введите функцию");
                 }
             }
         }
+
+        private void очиститьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            textBox1.Clear();
+            FormulaField.Clear();
+            ValueA.Clear();
+            ValueB.Clear();
+            ValueE.Value = 0;
+        }
     }
 }
-
