@@ -1,3 +1,4 @@
+using Bogosort;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,6 +11,7 @@ namespace Sorting
     {
         int[] Array;
         List<int> ArrayList = new List<int>();
+        List<int> BogoList = new List<int>();
 
         public Form1()
         {
@@ -138,7 +140,7 @@ namespace Sorting
 
         public void SortingSelection()
         {
-            if (checkBox1.Checked || checkBox2.Checked || checkBox3.Checked || checkBox4.Checked)
+            if (checkBox1.Checked || checkBox2.Checked || checkBox3.Checked || checkBox4.Checked || checkBox5.Checked)
             {
                 if (checkBox1.Checked)
                 {
@@ -156,6 +158,14 @@ namespace Sorting
                 {
                     QuickSort(Array, 0, Array.Length - 1);
                 }
+                if (checkBox5.Checked)
+                {
+                    long start = Stopwatch.GetTimestamp();
+                    BogoList.Bogosort();
+                    long end = Stopwatch.GetTimestamp();
+                    label5.Text = $"{end - start}";
+                    Array = BogoList.ToArray();
+                }
             }
             else
             {
@@ -170,7 +180,7 @@ namespace Sorting
             DataGridToArray(); //представление таблицы данных в массив
 
             SortingSelection(); //выбор сортировки
-
+ 
             ArrayToDataGrid(); //представление массива в таблицу данных
 
             DataGrid.AllowUserToAddRows = true;
@@ -178,12 +188,13 @@ namespace Sorting
 
         private void DataGridToArray()
         {
+            ArrayList.Clear();
             for (int i = 0; i < DataGrid.RowCount; i++)
             {
                 ArrayList.Add(Convert.ToInt32(DataGrid[0, i].Value));
             }
             Array = ArrayList.ToArray();
-            ArrayList.Clear();
+            BogoList = ArrayList;
         }
 
         private void ArrayToDataGrid()
