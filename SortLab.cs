@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -100,6 +101,15 @@ namespace Sorting
             }
         }
 
+        private void Wait(double seconds)
+        {
+            int ticks = System.Environment.TickCount + (int)Math.Round(seconds * 1000.0);
+            while (System.Environment.TickCount < ticks)
+            {
+                Application.DoEvents();
+            }
+        }
+
         public void SortingSelection()
         {
             if (checkBox1.Checked || checkBox2.Checked || checkBox3.Checked || checkBox4.Checked || checkBox5.Checked)
@@ -139,6 +149,7 @@ namespace Sorting
                 ArrayList.Add(Convert.ToInt32(DataGrid[0, i].Value));
             }
             Array = ArrayList.ToArray();
+            Visualization(Array);
         }
 
         private void ArrayToDataGrid()
@@ -170,10 +181,13 @@ namespace Sorting
                         temp = Array[i];
                         Array[i] = Array[j];
                         Array[j] = temp;
+                        SW.Stop();
+                        Visualization(Array);
+                        SW.Start();
+                        Thread.Sleep(10);
                     }
                 }
             }
-            Thread.Sleep(1);
             SW.Stop();
             label1.Text = $"{SW.ElapsedMilliseconds}";
             return Array;
@@ -193,9 +207,12 @@ namespace Sorting
                     Array[j + 1] = Array[j];
                     Array[j] = k;
                     j--;
+                    SW.Stop();
+                    Visualization(Array);
+                    SW.Start();
+                    Thread.Sleep(10);
                 }
             }
-            Thread.Sleep(1);
             SW.Stop();
             label2.Text = $"{SW.ElapsedMilliseconds}";
             return Array;
@@ -212,17 +229,28 @@ namespace Sorting
                 for (int i = left; i < right; i++)
                 {
                     if (Array[i] > Array[i + 1])
+                    {
                         Swap(Array, i, i + 1);
+                        SW.Stop();
+                        Visualization(Array);
+                        SW.Start();
+                        Thread.Sleep(10);
+                    }
                 }
                 right--;
                 for (int i = right; i > left; i--)
                 {
                     if (Array[i - 1] > Array[i])
+                    {
                         Swap(Array, i - 1, i);
+                        SW.Stop();
+                        Visualization(Array);
+                        SW.Start();
+                        Thread.Sleep(10);
+                    }
                 }
                 left++;
             }
-            Thread.Sleep(1);
             SW.Stop();
             label3.Text = $"{SW.ElapsedMilliseconds}";
             return Array;
@@ -266,7 +294,7 @@ namespace Sorting
             }
             else
             {
-                Thread.Sleep(1);
+                Thread.Sleep(10);
                 SW.Stop();
                 label4.Text = $"{SW.ElapsedMilliseconds}";
             }
@@ -278,7 +306,7 @@ namespace Sorting
             Stopwatch SW = new Stopwatch();
             SW.Start();
             ArrayList.Bogosort();
-            Thread.Sleep(1);
+            Thread.Sleep(10);
             SW.Stop();
             label5.Text = $"{SW.ElapsedMilliseconds}";
             Array = ArrayList.ToArray();
@@ -286,5 +314,14 @@ namespace Sorting
         }
         #endregion Sorting
 
+        public void Visualization(int[] Array)
+        {
+            chart.Series[0].Points.Clear();
+            for (int k = 0; k < Array.Length; k++)
+            {
+                chart.Series[0].Points.AddY(Array[k]);
+            }
+            Wait(1.0);
+        }
     }
 }
