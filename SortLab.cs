@@ -65,12 +65,25 @@ namespace Sorting
             Array[j] = Temp;
         }
 
-        static void Reverse(int[] Array)
+        void Reverse(int[] Array)
         {
             for (int i = 0; i < Array.Length / 2; i++)
             {
                 Swap(Array, i, Array.Length - i - 1);
             }
+        }
+
+        private bool IsSorted(int[] Array)
+        {
+            int Count = Array.Length;
+            while (--Count >= 1)
+            {
+                if (Array[Count] < Array[Count - 1])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void Check()
@@ -99,6 +112,16 @@ namespace Sorting
             {
                 ms5.Text = Millisecond;
             }
+        }
+
+        private void Visualization(int[] Array)
+        {
+            chart.Series[0].Points.Clear();
+            for (int i = 0; i < Array.Length; i++)
+            {
+                chart.Series[0].Points.AddY(Array[i]);
+            }
+            Wait(1.0);
         }
 
         private void Wait(double seconds)
@@ -132,7 +155,7 @@ namespace Sorting
                 }
                 if (checkBox5.Checked)
                 {
-                    BogoSort(ArrayList);
+                    BogoSort(Array);
                 }
             }
             else
@@ -258,70 +281,36 @@ namespace Sorting
 
         public int[] QuickSort(int[] Array, int LeftIndex, int RightIndex)
         {
-            Stopwatch SW = new Stopwatch();
-            SW.Start();
-            var i = LeftIndex;
-            var j = RightIndex;
-            var Pivot = Array[LeftIndex];
-
-            while (i <= j)
-            {
-                while (Array[i] < Pivot)
-                {
-                    i++;
-                }
-
-                while (Array[j] > Pivot)
-                {
-                    j--;
-                }
-
-                if (i <= j)
-                {
-                    Swap(Array, i, j);
-                    i++;
-                    j--;
-                }
-            }
-
-            if (LeftIndex < j)
-            {
-                QuickSort(Array, LeftIndex, j);
-            }
-            else if (i < RightIndex)
-            {
-                QuickSort(Array, i, RightIndex);
-            }
-            else
-            {
-                Thread.Sleep(10);
-                SW.Stop();
-                label4.Text = $"{SW.ElapsedMilliseconds}";
-            }
             return Array;
         }
 
-        public int[] BogoSort(List<int> ArrayList)
+        public int[] BogoSort(int[] Array)
         {
+            int Temp, Rnd;
             Stopwatch SW = new Stopwatch();
+            Random Random = new Random();
             SW.Start();
-            ArrayList.Bogosort();
-            Thread.Sleep(10);
+            while (!IsSorted(Array))
+            {
+                for (int i = 0; i < Array.Length; ++i)
+                {
+                    Rnd = Random.Next(Array.Length);
+                    Temp = Array[i];
+                    Array[i] = Array[Rnd];
+                    Array[Rnd] = Temp;
+                    SW.Stop();
+                    Visualization(Array);
+                    SW.Start();
+                    Thread.Sleep(10);
+                }
+            }
             SW.Stop();
             label5.Text = $"{SW.ElapsedMilliseconds}";
-            Array = ArrayList.ToArray();
             return Array;
         }
+
         #endregion Sorting
 
-        public void Visualization(int[] Array)
-        {
-            chart.Series[0].Points.Clear();
-            for (int k = 0; k < Array.Length; k++)
-            {
-                chart.Series[0].Points.AddY(Array[k]);
-            }
-            Wait(1.0);
-        }
+
     }
 }
