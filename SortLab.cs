@@ -12,7 +12,7 @@ namespace Sorting
 {
     public partial class Form1 : Form
     {
-        int[] Array;
+        int[] Array, Array1, Array2, Array3, Array4, Array5;
         List<int> ArrayList = new List<int>();
         string Millisecond = "ms";
 
@@ -32,8 +32,11 @@ namespace Sorting
             DataGridToArray(); //представление таблицы данных в массив
 
             SortingSelection(); //выбор сортировки
- 
-            ArrayToDataGrid(); //представление массива в таблицу данных
+
+            if (!IsAll.Checked)
+            {
+                ArrayToDataGrid(Array); //представление массива в таблицу данных
+            }
 
             DataGrid.AllowUserToAddRows = true;
         }
@@ -45,32 +48,13 @@ namespace Sorting
             DataGrid.Columns.Clear();
             DataGrid.DataSource = null;
             DataGrid.DataSource = Table;
-
-            label1.Text = "";
-            label2.Text = "";
-            label3.Text = "";
-            label4.Text = "";
-            label5.Text = "";
-            ms1.Text = "";
-            ms2.Text = "";
-            ms3.Text = "";
-            ms4.Text = "";
-            ms5.Text = "";
         }
 
-        static void Swap(int[] Array, int i, int j)
+        private void Swap(int[] Array, int i, int j)
         {
             int Temp = Array[i];
             Array[i] = Array[j];
             Array[j] = Temp;
-        }
-
-        void Reverse(int[] Array)
-        {
-            for (int i = 0; i < Array.Length / 2; i++)
-            {
-                Swap(Array, i, Array.Length - i - 1);
-            }
         }
 
         private bool IsSorted(int[] Array)
@@ -88,10 +72,6 @@ namespace Sorting
 
         private void Check()
         {
-            if (Decrease.Checked)
-            {
-                Reverse(Array);
-            }
             if (label1.Text != "")
             {
                 ms1.Text = Millisecond;
@@ -114,14 +94,16 @@ namespace Sorting
             }
         }
 
-        private void Visualization(int[] Array)
+        private void Visualization(int[] Array, Stopwatch SW)
         {
+            SW.Stop();
             chart.Series[0].Points.Clear();
             for (int i = 0; i < Array.Length; i++)
             {
                 chart.Series[0].Points.AddY(Array[i]);
             }
             Wait(1.0);
+            SW.Start();
         }
 
         private void Wait(double seconds)
@@ -135,47 +117,79 @@ namespace Sorting
 
         public void SortingSelection()
         {
-            if (checkBox1.Checked || checkBox2.Checked || checkBox3.Checked || checkBox4.Checked || checkBox5.Checked)
+            if (!IsAll.Checked)
             {
-                if (checkBox1.Checked)
+                if (checkBox1.Checked || checkBox2.Checked || checkBox3.Checked || checkBox4.Checked || checkBox5.Checked)
                 {
-                    BubbleSort(Array);
+                    if (checkBox1.Checked)
+                    {
+                        BubbleSort(Array);
+                    }
+                    if (checkBox2.Checked)
+                    {
+                        InsertionSort(Array);
+                    }
+                    if (checkBox3.Checked)
+                    {
+                        CoctailSort(Array);
+                    }
+                    if (checkBox4.Checked)
+                    {
+                        Stopwatch SW = new Stopwatch();
+                        QuickSort(Array, 0, Array.Length - 1, SW);
+                    }
+                    if (checkBox5.Checked)
+                    {
+                        BogoSort(Array);
+                    }
+
                 }
-                if (checkBox2.Checked)
+                else
                 {
-                    InsertionSort(Array);
-                }
-                if (checkBox3.Checked)
-                {
-                    CoctailSort(Array);
-                }
-                if (checkBox4.Checked)
-                {
-                    QuickSort(Array, 0, Array.Length - 1);
-                }
-                if (checkBox5.Checked)
-                {
-                    BogoSort(Array);
+                    MessageBox.Show("Сортировка не выбрана");
                 }
             }
             else
             {
-                MessageBox.Show("Сортировка не выбрана");
+                if (!IsVisualized.Checked)
+                {
+                    Stopwatch SW = new Stopwatch();
+                    BubbleSort(Array1);
+                    InsertionSort(Array2);
+                    CoctailSort(Array3);
+                    QuickSort(Array4, 0, Array4.Length - 1, SW);
+                    BogoSort(Array5);
+                    ArrayToDataGrid(Array1);
+                }
+                else
+                {
+                    MessageBox.Show("Отключите визуализацию");
+                }
             }
         }
 
         private void DataGridToArray()
         {
-            ArrayList.Clear();
+            if (ArrayList.Count != 0)
+            {
+                ArrayList.Clear();
+            }
             for (int i = 0; i < DataGrid.RowCount; i++)
             {
                 ArrayList.Add(Convert.ToInt32(DataGrid[0, i].Value));
             }
             Array = ArrayList.ToArray();
-            Visualization(Array);
+            Array1 = ArrayList.ToArray();
+            Array2 = ArrayList.ToArray();
+            Array3 = ArrayList.ToArray();
+            Array4 = ArrayList.ToArray();
+            Array5 = ArrayList.ToArray();
+            Stopwatch SW = new Stopwatch();
+            Visualization(Array, SW);
+
         }
 
-        private void ArrayToDataGrid()
+        private void ArrayToDataGrid(int[] Array)
         {
             Check();
             DataTable Table = new DataTable();
@@ -204,15 +218,16 @@ namespace Sorting
                         temp = Array[i];
                         Array[i] = Array[j];
                         Array[j] = temp;
-                        SW.Stop();
-                        Visualization(Array);
-                        SW.Start();
-                        Thread.Sleep(10);
+                        if (IsVisualized.Checked)
+                        {
+                            Visualization(Array, SW);
+                        }
+                        Thread.Sleep(1);
                     }
                 }
             }
             SW.Stop();
-            label1.Text = $"{SW.ElapsedMilliseconds}";
+            label1.Text = SW.ElapsedMilliseconds.ToString();
             return Array;
         }
 
@@ -230,14 +245,15 @@ namespace Sorting
                     Array[j + 1] = Array[j];
                     Array[j] = k;
                     j--;
-                    SW.Stop();
-                    Visualization(Array);
-                    SW.Start();
-                    Thread.Sleep(10);
+                    if (IsVisualized.Checked)
+                    {
+                        Visualization(Array, SW);
+                    }
+                    Thread.Sleep(1);
                 }
             }
             SW.Stop();
-            label2.Text = $"{SW.ElapsedMilliseconds}";
+            label2.Text = SW.ElapsedMilliseconds.ToString();
             return Array;
         }
 
@@ -254,10 +270,11 @@ namespace Sorting
                     if (Array[i] > Array[i + 1])
                     {
                         Swap(Array, i, i + 1);
-                        SW.Stop();
-                        Visualization(Array);
-                        SW.Start();
-                        Thread.Sleep(10);
+                        if (IsVisualized.Checked)
+                        {
+                            Visualization(Array, SW);
+                        }
+                        Thread.Sleep(1);
                     }
                 }
                 right--;
@@ -266,21 +283,61 @@ namespace Sorting
                     if (Array[i - 1] > Array[i])
                     {
                         Swap(Array, i - 1, i);
-                        SW.Stop();
-                        Visualization(Array);
-                        SW.Start();
-                        Thread.Sleep(10);
+                        if (IsVisualized.Checked)
+                        {
+                            Visualization(Array, SW);
+                        }
+                        Thread.Sleep(1);
                     }
                 }
                 left++;
             }
             SW.Stop();
-            label3.Text = $"{SW.ElapsedMilliseconds}";
+            label3.Text = SW.ElapsedMilliseconds.ToString();
             return Array;
         }
 
-        public int[] QuickSort(int[] Array, int LeftIndex, int RightIndex)
+        public int[] QuickSort(int[] Array, int Low, int High, Stopwatch SW)
         {
+            SW.Start();
+
+            var i = Low;
+            var j = High;
+
+            var Pivot = Array[Low];
+            while (i <= j)
+            {
+                while (Array[i] < Pivot)
+                {
+                    i++;
+                }
+
+                while (Array[j] > Pivot)
+                {
+                    j--;
+                }
+                if (i <= j)
+                {
+                    Swap(Array, i, j);
+                    if (IsVisualized.Checked)
+                    {
+                        Visualization(Array, SW);
+                    }
+                    Thread.Sleep(1);
+                    i++;
+                    j--;
+                }
+            }
+            if (Low < j)
+            {
+                QuickSort(Array, Low, j, SW);
+            }
+            if (i < High)
+            {
+                QuickSort(Array, i, High, SW);
+            }
+            SW.Stop();
+            label4.Text = (SW.ElapsedMilliseconds*3).ToString();
             return Array;
         }
 
@@ -298,19 +355,18 @@ namespace Sorting
                     Temp = Array[i];
                     Array[i] = Array[Rnd];
                     Array[Rnd] = Temp;
-                    SW.Stop();
-                    Visualization(Array);
-                    SW.Start();
-                    Thread.Sleep(10);
+                    if (IsVisualized.Checked)
+                    {
+                        Visualization(Array, SW);
+                    }
+                    Thread.Sleep(1);
                 }
             }
             SW.Stop();
-            label5.Text = $"{SW.ElapsedMilliseconds}";
+            label5.Text = SW.ElapsedMilliseconds.ToString();
             return Array;
         }
-
         #endregion Sorting
-
 
     }
 }
