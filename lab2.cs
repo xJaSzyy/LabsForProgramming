@@ -1,17 +1,11 @@
 using System;
-using FunctionParser;
 using System.Windows.Forms;
-using System.Collections.Generic;
+using org.mariuszgromada.math.mxparser;
 
-namespace DichotomyMethod
+namespace DichotomyMethodv2
 {
     public partial class Form1 : Form
     {
-        string[] idsNames = new string[10];
-        double[] idsValues = new double[10];
-        List<string> listNames = new List<string>();
-        List<double> listValues = new List<double>();
-
         public Form1()
         {
             InitializeComponent();
@@ -19,123 +13,119 @@ namespace DichotomyMethod
 
         private void Form1_Load(object sender, EventArgs e)
         {
+
         }
 
-        double Function(double x)
+        bool Check()
         {
-            listNames.Clear();
-            listValues.Clear();
-            listNames.Add("x");
-            idsNames = listNames.ToArray();
-            listValues.Add(x);
-            idsValues = listValues.ToArray();
-            string Formula = FormulaField.Text;
-            if (Expression.IsExpression(Formula, idsNames))
+            if (IntFrom.Text == "")
             {
-                Expression expression = new Expression(Formula, idsNames, null);
-                double result = expression.CalculateValue(idsValues);
-                return result;
+                MessageBox.Show("Начальная точка интервала не задана");
+                return false;
             }
-            return 0;
+            else if (IntTo.Text == "")
+            {
+                MessageBox.Show("Конечная точка интервала не задана");
+                return false;
+            }
+            else if (Formula.Text == "")
+            {
+                MessageBox.Show("Формула не задана");
+                return false;
+            }
+            else if (Convert.ToDouble(Accuracy.Text) == 0)
+            {
+                MessageBox.Show("Точность не задана");
+                return false;
+            }
+            return true;
         }
 
-        void MethodDichotomy(double a, double b, double e)
+        double Function(double value)
         {
-            double c;
-            while (b - a > e)
+            Argument x = new Argument("x = 1");
+            x.setArgumentValue(value);
+            Expression e = new Expression(Formula.Text, x);
+            double result = e.calculate();
+            return result;
+        }
+
+        void MethodDichotomy(double a, double b, double eps)
+        {
+            try
             {
-                c = (a + b) / 2;
-                if (Function(b) * Function(c) < 0)
+                do
                 {
-                    a = c;
+                    if (Function(a) > Function(b))
+                    {
+                        a = a + (b - a) / 2;
+                    }
+                    else
+                    {
+                        b = a + (b - a) / 2;
+                    }
                 }
-                else
-                {
-                    b = c;
-                }
+                while (Math.Abs(Function(b) - Function(a)) / 2 >= eps);
+                Result.Text = Math.Round(Function(Function(b - a) / 2), (int)(eps * 100)).ToString();
             }
-            textBox1.Text = Math.Round((a + b) / 2, 5).ToString();
-        }
-
-        private void найтиМинимумToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            textBox1.Visible = true;
-            double a, b, eps;
-            if (ValueA.Text == "")
+            catch (Exception ex)
             {
-                MessageBox.Show("Введите значение интервала <от>");
-            }
-            if (ValueB.Text == "")
-            {
-                MessageBox.Show("Введите значение интервала <до>");
-            }
-            if (ValueA.Text != "" && ValueB.Text != "")
-            {
-                a = Convert.ToDouble(ValueA.Text);
-                b = Convert.ToDouble(ValueB.Text);
-                eps = Convert.ToDouble(ValueE.Text);
-                MethodDichotomy(a, b, eps);
+                MessageBox.Show("" + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void построитьГрафикToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            chart.Series[0].Points.Clear();
-            if (ValueA.Text == "")
+            if (Check())
             {
-                MessageBox.Show("Введите значение интервала <от>");
-            }
-            if (ValueB.Text == "")
-            {
-                MessageBox.Show("Введите значение интервала <до>");
-            }
-            if (ValueE.Value == 0)
-            {
-                MessageBox.Show("Введите значение шага");
-            }
-            if (ValueA.Text != "" && ValueB.Text != "" && ValueE.Value != 0)
-            {
-                double a = Convert.ToDouble(ValueA.Text);
-                double b = Convert.ToDouble(ValueB.Text);
-                double h = Convert.ToDouble(ValueE.Text);
+                chart.Series[0].Points.Clear();
 
-                double x;
-                x = a;
-                if (FormulaField.Text != "")
-                {
-                    while (x <= b)
-                    {
-                        listNames.Add("x");
-                        idsNames = listNames.ToArray();
-                        listValues.Add(x);
-                        idsValues = listValues.ToArray();
+                double a = Convert.ToDouble(IntFrom.Text);
+                double b = Convert.ToDouble(IntTo.Text);
+                double eps = Convert.ToDouble(Accuracy.Text);
+                double h = 0.1;
+                double y;
 
-                        string Formula = FormulaField.Text;
-                        if (Expression.IsExpression(Formula, idsNames))
-                        {
-                            Expression expression = new Expression(Formula, idsNames, null);
-                            double y = expression.CalculateValue(idsValues);
-                            chart.Series[0].Points.AddXY(x, y);
-                            x += h;
-                            listNames.Clear();
-                            listValues.Clear();
-                        }
-                    }
-                }
-                else
+                MethodDichotomy(a, b, eps);
+
+                Argument argx = new Argument($"x = {a}");
+                double x = a;
+                while (x <= b)
                 {
-                    MessageBox.Show("Введите функцию");
+                    Expression expy = new Expression(Formula.Text, argx);
+                    y = expy.calculate();
+                    chart.Series[0].Points.AddXY(x, y);
+                    x += h;
+                    argx.setArgumentValue(x);
                 }
+                ResultX.Text = chart.Series[0].Points.FindMinByValue().XValue.ToString();
+                argx.setArgumentValue(Convert.ToDouble(ResultX.Text));
+                Expression exp = new Expression(Formula.Text, argx);
+                y = exp.calculate();
+                Result.Text = Math.Round(y, (int)(eps * 100)).ToString();
+                chart.Series[1].Points.Clear();
+                chart.Series[1].Points.AddXY(Convert.ToDouble(ResultX.Text), Convert.ToDouble(Result.Text));
             }
         }
 
         private void очиститьToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            textBox1.Clear();
-            FormulaField.Clear();
-            ValueA.Clear();
-            ValueB.Clear();
-            ValueE.Value = 0;
+            IntFrom.Text = "";
+            IntTo.Text = "";
+            Accuracy.Text = "";
+            Formula.Text = "";
+            Result.Text = "";
         }
+
+        private void IntFrom_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) && e.KeyChar != 45; //только цифры
+        }
+
+        private void IntTo_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) && e.KeyChar != 45;//только цифры
+        }
+
     }
 }
