@@ -52,20 +52,26 @@ namespace DichotomyMethodv2
 
         void MethodDichotomy(double a, double b, double eps)
         {
-            double c;
-            while (b - a > eps)
+            try
             {
-                c = (a + b) / 2;
-                if (Function(b) * Function(c) < 0)
+                do
                 {
-                    a = c;
+                    if (Function(a) > Function(b))
+                    {
+                        a = a + (b - a) / 2;
+                    }
+                    else
+                    {
+                        b = a + (b - a) / 2;
+                    }
                 }
-                else
-                {
-                    b = c;
-                }
+                while (Math.Abs(Function(b) - Function(a)) / 2 >= eps);
+                Result.Text = Math.Round(Function(Function(b - a) / 2), (int)(eps * 100)).ToString();
             }
-            Result.Text = Math.Round((a + b) / 2, 5).ToString();
+            catch (Exception ex)
+            {
+                MessageBox.Show("" + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void построитьГрафикToolStripMenuItem_Click(object sender, EventArgs e)
@@ -76,29 +82,29 @@ namespace DichotomyMethodv2
 
                 double a = Convert.ToDouble(IntFrom.Text);
                 double b = Convert.ToDouble(IntTo.Text);
-                double h = Convert.ToDouble(Accuracy.Text);
+                double eps = Convert.ToDouble(Accuracy.Text);
+                double h = 0.1;
+                double y;
+
+                MethodDichotomy(a, b, eps);
 
                 Argument argx = new Argument($"x = {a}");
                 double x = a;
                 while (x <= b)
                 {
                     Expression expy = new Expression(Formula.Text, argx);
-                    double y = expy.calculate();
+                    y = expy.calculate();
                     chart.Series[0].Points.AddXY(x, y);
                     x += h;
                     argx.setArgumentValue(x);
                 }
-            }
-        }
-
-        private void найтиМинимумToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (Check())
-            {
-                double a = Convert.ToDouble(IntFrom.Text);
-                double b = Convert.ToDouble(IntTo.Text);
-                double eps = Convert.ToDouble(Accuracy.Text);
-                MethodDichotomy(a, b, eps);
+                ResultX.Text = chart.Series[0].Points.FindMinByValue().XValue.ToString();
+                argx.setArgumentValue(Convert.ToDouble(ResultX.Text));
+                Expression exp = new Expression(Formula.Text, argx);
+                y = exp.calculate();
+                Result.Text = Math.Round(y, (int)(eps * 100)).ToString();
+                chart.Series[1].Points.Clear();
+                chart.Series[1].Points.AddXY(Convert.ToDouble(ResultX.Text), Convert.ToDouble(Result.Text));
             }
         }
 
@@ -120,5 +126,6 @@ namespace DichotomyMethodv2
         {
             e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) && e.KeyChar != 45;//только цифры
         }
+
     }
 }
