@@ -38,6 +38,11 @@ namespace DichotomyMethodv2
                 MessageBox.Show("Точность не задана");
                 return false;
             }
+            else if (Math.Sign(Convert.ToDouble(IntFrom.Text)) == 1 && Math.Sign(Convert.ToDouble(IntTo.Text)) == -1)
+            {
+                MessageBox.Show("Интервал задан неверно");
+                return false;
+            }
             return true;
         }
 
@@ -84,7 +89,7 @@ namespace DichotomyMethodv2
                 double b = Convert.ToDouble(IntTo.Text);
                 double eps = Convert.ToDouble(Accuracy.Text);
                 double h = 0.1;
-                double y;
+                double y, ymax = 0,ymin = 9999;
 
                 MethodDichotomy(a, b, eps);
 
@@ -100,11 +105,17 @@ namespace DichotomyMethodv2
                 }
                 ResultX.Text = chart.Series[0].Points.FindMinByValue().XValue.ToString();
                 argx.setArgumentValue(Convert.ToDouble(ResultX.Text));
-                Expression exp = new Expression(Formula.Text, argx);
-                y = exp.calculate();
-                Result.Text = Math.Round(y, (int)(eps * 100)).ToString();
+                Expression min = new Expression(Formula.Text, argx);
+                ymin = min.calculate();
+                Result.Text = Math.Round(ymin, (int)(eps * 100)).ToString();
                 chart.Series[1].Points.Clear();
                 chart.Series[1].Points.AddXY(Convert.ToDouble(ResultX.Text), Convert.ToDouble(Result.Text));
+                argx.setArgumentValue(chart.Series[0].Points.FindMaxByValue().XValue);
+                Expression max = new Expression(Formula.Text, argx);
+                ymax = max.calculate();
+
+                chart.ChartAreas[0].AxisY.Minimum = ymin;
+                chart.ChartAreas[0].AxisY.Maximum = ymax;
             }
         }
 
@@ -115,6 +126,9 @@ namespace DichotomyMethodv2
             Accuracy.Text = "";
             Formula.Text = "";
             Result.Text = "";
+            ResultX.Text = "";
+            chart.Series[0].Points.Clear();
+            chart.Series[1].Points.Clear();
         }
 
         private void IntFrom_KeyPress(object sender, KeyPressEventArgs e)
