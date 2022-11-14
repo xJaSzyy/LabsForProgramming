@@ -1,4 +1,3 @@
-using Bogosort;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -297,7 +296,9 @@ namespace Sorting
                 {
                     if (Array[i] > Array[i + 1])
                     {
+                        SW.Stop();
                         Swap(Array, i, i + 1);
+                        SW.Start();
                         if (IsVisualized.Checked)
                         {
                             SW.Stop();
@@ -311,7 +312,9 @@ namespace Sorting
                 {
                     if (Array[i - 1] > Array[i])
                     {
+                        SW.Stop();
                         Swap(Array, i - 1, i);
+                        SW.Start();
                         if (IsVisualized.Checked)
                         {
                             SW.Stop();
