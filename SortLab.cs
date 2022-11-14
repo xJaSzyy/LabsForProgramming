@@ -6,7 +6,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace Sorting
 {
@@ -50,11 +52,26 @@ namespace Sorting
             DataGrid.DataSource = Table;
         }
 
+        private void заполнитьМассивToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Random Random = new Random();
+            int[] RandomArray = new int[500];
+            for (int i = 0; i < RandomArray.Length; i++)
+            {
+                RandomArray[i] = Random.Next(1, 500);
+            }
+            ArrayToDataGrid(RandomArray);
+        }
+
         private void Swap(int[] Array, int i, int j)
         {
             int Temp = Array[i];
             Array[i] = Array[j];
             Array[j] = Temp;
+            if (IsVisualized.Checked)
+            {
+                Visualization(Array);
+            }
         }
 
         private bool IsSorted(int[] Array)
@@ -94,16 +111,14 @@ namespace Sorting
             }
         }
 
-        private void Visualization(int[] Array, Stopwatch SW)
+        public void Visualization(int[] Array)
         {
-            SW.Stop();
             chart.Series[0].Points.Clear();
             for (int i = 0; i < Array.Length; i++)
             {
                 chart.Series[0].Points.AddY(Array[i]);
             }
-            Wait(1.0);
-            SW.Start();
+            Wait(0.001);
         }
 
         private void Wait(double seconds)
@@ -115,7 +130,7 @@ namespace Sorting
             }
         }
 
-        public void SortingSelection()
+        public async Task SortingSelection()
         {
             if (!IsAll.Checked)
             {
@@ -124,23 +139,27 @@ namespace Sorting
                     if (checkBox1.Checked)
                     {
                         BubbleSort(Array);
+                        Visualization(Array);
                     }
                     if (checkBox2.Checked)
                     {
                         InsertionSort(Array);
+                        Visualization(Array);
                     }
                     if (checkBox3.Checked)
                     {
                         CoctailSort(Array);
+                        Visualization(Array);
                     }
                     if (checkBox4.Checked)
                     {
-                        Stopwatch SW = new Stopwatch();
-                        QuickSort(Array, 0, Array.Length - 1, SW);
+                        QuickSort(Array);
+                        Visualization(Array);
                     }
                     if (checkBox5.Checked)
                     {
                         BogoSort(Array);
+                        Visualization(Array);
                     }
 
                 }
@@ -153,13 +172,13 @@ namespace Sorting
             {
                 if (!IsVisualized.Checked)
                 {
-                    Stopwatch SW = new Stopwatch();
-                    BubbleSort(Array1);
-                    InsertionSort(Array2);
-                    CoctailSort(Array3);
-                    QuickSort(Array4, 0, Array4.Length - 1, SW);
-                    BogoSort(Array5);
+                    await Task.Run(() => BubbleSort(Array1));
                     ArrayToDataGrid(Array1);
+                    await Task.Run(() => InsertionSort(Array2));
+                    await Task.Run(() => CoctailSort(Array3));
+                    await Task.Run(() => QuickSort(Array4));
+                    //await Task.Run(() => BogoSort(Array5));
+                    Check();
                 }
                 else
                 {
@@ -185,11 +204,11 @@ namespace Sorting
             Array4 = ArrayList.ToArray();
             Array5 = ArrayList.ToArray();
             Stopwatch SW = new Stopwatch();
-            Visualization(Array, SW);
+            Visualization(Array);
 
         }
 
-        private void ArrayToDataGrid(int[] Array)
+        public void ArrayToDataGrid(int[] Array)
         {
             Check();
             DataTable Table = new DataTable();
@@ -201,6 +220,11 @@ namespace Sorting
             DataGrid.Columns.Clear();
             DataGrid.DataSource = null;
             DataGrid.DataSource = Table;
+        }
+        
+        public static void ToLabel(Label label, string text)
+        {
+            label.Invoke(new Action(() => label.Text = text));
         }
 
         #region Sorting
@@ -220,14 +244,16 @@ namespace Sorting
                         Array[j] = temp;
                         if (IsVisualized.Checked)
                         {
-                            Visualization(Array, SW);
+                            SW.Stop();
+                            Visualization(Array);
+                            SW.Start();
                         }
-                        Thread.Sleep(1);
                     }
                 }
             }
+            Wait(1);
             SW.Stop();
-            label1.Text = SW.ElapsedMilliseconds.ToString();
+            ToLabel(label1, SW.ElapsedMilliseconds.ToString());
             return Array;
         }
 
@@ -247,13 +273,15 @@ namespace Sorting
                     j--;
                     if (IsVisualized.Checked)
                     {
-                        Visualization(Array, SW);
+                        SW.Stop();
+                        Visualization(Array);
+                        SW.Start();
                     }
-                    Thread.Sleep(1);
                 }
             }
+            Wait(1);
             SW.Stop();
-            label2.Text = SW.ElapsedMilliseconds.ToString();
+            ToLabel(label2, SW.ElapsedMilliseconds.ToString());
             return Array;
         }
 
@@ -272,9 +300,10 @@ namespace Sorting
                         Swap(Array, i, i + 1);
                         if (IsVisualized.Checked)
                         {
-                            Visualization(Array, SW);
+                            SW.Stop();
+                            Visualization(Array);
+                            SW.Start();
                         }
-                        Thread.Sleep(1);
                     }
                 }
                 right--;
@@ -285,59 +314,103 @@ namespace Sorting
                         Swap(Array, i - 1, i);
                         if (IsVisualized.Checked)
                         {
-                            Visualization(Array, SW);
+                            SW.Stop();
+                            Visualization(Array);
+                            SW.Start();
                         }
-                        Thread.Sleep(1);
                     }
                 }
                 left++;
             }
+            Wait(1);
             SW.Stop();
-            label3.Text = SW.ElapsedMilliseconds.ToString();
+            ToLabel(label3, SW.ElapsedMilliseconds.ToString());
             return Array;
         }
 
-        public int[] QuickSort(int[] Array, int Low, int High, Stopwatch SW)
+        public int[] QuickSort(int[] Array)
         {
+            Stopwatch SW = new Stopwatch();
             SW.Start();
+            var stack = new Stack<int>();
 
-            var i = Low;
-            var j = High;
+            int pivot;
+            int pivotIndex = 0;
+            int leftIndex = pivotIndex + 1;
+            int rightIndex = Array.Length - 1;
 
-            var Pivot = Array[Low];
-            while (i <= j)
+            stack.Push(pivotIndex);
+            stack.Push(rightIndex);
+
+            int leftIndexOfSubSet, rightIndexOfSubset;
+
+            while (stack.Count > 0)
             {
-                while (Array[i] < Pivot)
+                if (IsVisualized.Checked)
                 {
-                    i++;
+                    SW.Stop();
+                    Visualization(Array);
+                    SW.Start();
+                }
+                rightIndexOfSubset = stack.Pop();
+                leftIndexOfSubSet = stack.Pop();
+
+                leftIndex = leftIndexOfSubSet + 1;
+                pivotIndex = leftIndexOfSubSet;
+                rightIndex = rightIndexOfSubset;
+
+                pivot = Array[pivotIndex];
+
+                if (leftIndex > rightIndex)
+                {
+                    continue;
                 }
 
-                while (Array[j] > Pivot)
+                while (leftIndex < rightIndex)
                 {
-                    j--;
-                }
-                if (i <= j)
-                {
-                    Swap(Array, i, j);
-                    if (IsVisualized.Checked)
+                    while ((leftIndex <= rightIndex) && (Array[leftIndex] <= pivot))
                     {
-                        Visualization(Array, SW);
+                        leftIndex++;
                     }
-                    Thread.Sleep(1);
-                    i++;
-                    j--;
+
+                    while ((leftIndex <= rightIndex) && (Array[rightIndex] >= pivot))
+                    {
+                        rightIndex--;
+                    }
+
+                    if (rightIndex >= leftIndex)
+                    {
+                        SW.Stop();
+                        Swap(Array, leftIndex, rightIndex);
+                        SW.Start();
+                    }
+                }
+
+                if (pivotIndex <= rightIndex)
+                {
+                    if (Array[pivotIndex] > Array[rightIndex])
+                    {
+                        SW.Stop();
+                        Swap(Array, pivotIndex, rightIndex);
+                        SW.Start();
+                    }
+                }
+
+                if (leftIndexOfSubSet < rightIndex)
+                {
+                    stack.Push(leftIndexOfSubSet);
+                    stack.Push(rightIndex - 1);
+                }
+
+                if (rightIndexOfSubset > rightIndex)
+                {
+                    stack.Push(rightIndex + 1);
+                    stack.Push(rightIndexOfSubset);
                 }
             }
-            if (Low < j)
-            {
-                QuickSort(Array, Low, j, SW);
-            }
-            if (i < High)
-            {
-                QuickSort(Array, i, High, SW);
-            }
+            Wait(1);
             SW.Stop();
-            label4.Text = (SW.ElapsedMilliseconds*3).ToString();
+            ToLabel(label4, SW.ElapsedMilliseconds.ToString());
             return Array;
         }
 
@@ -357,16 +430,14 @@ namespace Sorting
                     Array[Rnd] = Temp;
                     if (IsVisualized.Checked)
                     {
-                        Visualization(Array, SW);
+                        Visualization(Array);
                     }
-                    Thread.Sleep(1);
                 }
             }
             SW.Stop();
-            label5.Text = SW.ElapsedMilliseconds.ToString();
+            ToLabel(label5, SW.ElapsedMilliseconds.ToString());
             return Array;
         }
         #endregion Sorting
-
     }
 }
