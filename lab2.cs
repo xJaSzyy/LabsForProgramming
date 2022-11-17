@@ -51,7 +51,6 @@ namespace GoldenSection
         {
             IntFrom.Text = "";
             IntTo.Text = "";
-            Accuracy.Text = "";
             Formula.Text = "";
             ResultY.Text = "";
             ResultX.Text = "";
@@ -69,8 +68,8 @@ namespace GoldenSection
             Expression expMax = new Expression(Formula.Text, argMax);
             double ymin = expMin.calculate();
             double ymax = expMax.calculate();
-            chart.ChartAreas[0].AxisY.Minimum = ymin - 0.5;
-            chart.ChartAreas[0].AxisY.Maximum = ymax + 0.5;
+            chart.ChartAreas[0].AxisY.Minimum = ymin - 0.15;
+            chart.ChartAreas[0].AxisY.Maximum = ymax + 0.15;
         }
 
         private bool Check()
@@ -106,72 +105,41 @@ namespace GoldenSection
             return result;
         }
 
-        private void DisplayExtremes(double x)
+        private void DisplayExtremes(double x, double eps)
         {
             Argument argument = new Argument("x", x);
             Expression expression = new Expression(Formula.Text, argument);
             double y = expression.calculate();
-            ResultY.Text = Math.Round(y, 2).ToString();
+            ResultY.Text = Math.Round(y, (int)(eps * 100)).ToString();
             chart.Series[1].Points.AddXY(Convert.ToDouble(ResultX.Text), Convert.ToDouble(ResultY.Text));
-        }
-
-        private void GoldenSectionSearch(double a, double b, double eps)
-        {
-            if (Check())
-            {
-                Random rnd = new Random();
-                double x = rnd.Next((int)a, (int)b);
-                if (Function(x) < Function(x + eps))
-                {
-                    x = x - eps;
-                    while (Function(x) > Function(x - eps))
-                    {
-                        x = x - eps;
-                    }
-                }
-                else
-                {
-                    x = x + eps;
-                    while (Function(x) > Function(x + eps))
-                    {
-                        x = x + eps;
-                    }
-                }
-                if (x < a || x > b)
-                {
-                    GoldenSectionSearch(a, b, eps);
-                }
-                else
-                {
-                    ResultX.Text = Math.Round(x, 2).ToString();
-                    DisplayExtremes(Math.Round(x, 2));
-                }
-            }
         }
 
         private void GSS(double a, double b, double eps)
         {
-            for (int i = 0; b - a > eps; i++)
+            if (Check())
             {
                 double z = (3 - Math.Sqrt(5)) / 2;
                 double x1 = a + z * (b - a), x2 = b - z * (b - a);
-                if (Function(x1) <= Function(x2))
+                for (int i = 0; b - a > eps; i++)
                 {
-                    b = x2;
-                    x2 = x1;
-                    x1 = a + b - x2;
+                    if (Function(x1) <= Function(x2))
+                    {
+                        b = x2;
+                        x2 = x1;
+                        x1 = a + b - x2;
+                    }
+                    else
+                    {
+                        a = x1;
+                        x1 = x2;
+                        x2 = a + b - x1;
+                    }
                 }
-                else
-                {
-                    a = x1;
-                    x1 = x2;
-                    x2 = a + b - x1;
-                }
+                double x = (a + b) / 2;
+                ResultX.Text = Math.Round(x, (int)(eps * 100)).ToString();
+                ResultY.Text = Math.Round(Function(x), (int)(eps * 100)).ToString();
+                DisplayExtremes(x, eps);
             }
-            double x = (a + b) / 2;
-            ResultX.Text = Math.Round(x, 2).ToString();
-            ResultY.Text = Math.Round(Function(x), 2).ToString();
-            DisplayExtremes(Math.Round(x, 2));
         }
 
         private void IntFrom_KeyPress(object sender, KeyPressEventArgs e)
@@ -182,6 +150,14 @@ namespace GoldenSection
         private void IntTo_KeyPress(object sender, KeyPressEventArgs e)
         {
             e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) && e.KeyChar != 45;//только цифры
+        }
+
+        private void chart_Click(object sender, EventArgs e)
+        {
+            ChartArea CA = chart.ChartAreas[0];  // quick reference
+            CA.AxisX.ScaleView.Zoomable = true;
+            CA.CursorX.AutoScroll = true;
+            CA.CursorX.IsUserSelectionEnabled = true;
         }
     }
 }
