@@ -30,7 +30,7 @@ namespace Sorting
         {
             DataGrid.AllowUserToAddRows = false;
 
-            DataGridToArray(); //представление таблицы данных в массив
+            DataGridToArray(chart); //представление таблицы данных в массив
 
             SortingSelection(); //выбор сортировки
 
@@ -54,22 +54,22 @@ namespace Sorting
         private void заполнитьМассивToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Random Random = new Random();
-            int[] RandomArray = new int[500];
+            int[] RandomArray = new int[50];
             for (int i = 0; i < RandomArray.Length; i++)
             {
-                RandomArray[i] = Random.Next(1, 500);
+                RandomArray[i] = Random.Next(1, 10);
             }
             ArrayToDataGrid(RandomArray);
         }
 
-        private void Swap(int[] Array, int i, int j)
+        private void Swap(Chart c, int[] Array, int i, int j)
         {
             int Temp = Array[i];
             Array[i] = Array[j];
             Array[j] = Temp;
             if (IsVisualized.Checked)
             {
-                Visualization(Array);
+                Invoke(new Action(() => Visualization(c, Array)));
             }
         }
 
@@ -110,12 +110,12 @@ namespace Sorting
             }
         }
 
-        public void Visualization(int[] Array)
+        public void Visualization(Chart c ,int[] Array)
         {
-            chart.Series[0].Points.Clear();
+            c.Series[0].Points.Clear();
             for (int i = 0; i < Array.Length; i++)
             {
-                chart.Series[0].Points.AddY(Array[i]);
+                c.Series[0].Points.AddY(Array[i]);
             }
             Wait(0.001);
         }
@@ -138,27 +138,27 @@ namespace Sorting
                     if (checkBox1.Checked)
                     {
                         BubbleSort(Array);
-                        Visualization(Array);
+                        Visualization(bubbleChart, Array);
                     }
                     if (checkBox2.Checked)
                     {
                         InsertionSort(Array);
-                        Visualization(Array);
+                        Visualization(insertionChart, Array);
                     }
                     if (checkBox3.Checked)
                     {
                         CoctailSort(Array);
-                        Visualization(Array);
+                        Visualization(coctailChart, Array);
                     }
                     if (checkBox4.Checked)
                     {
                         QuickSort(Array);
-                        Visualization(Array);
+                        Visualization(quickChart, Array);
                     }
                     if (checkBox5.Checked)
                     {
                         BogoSort(Array);
-                        Visualization(Array);
+                        Visualization(chart, Array);
                     }
 
                 }
@@ -169,24 +169,21 @@ namespace Sorting
             }
             else
             {
-                if (!IsVisualized.Checked)
-                {
-                    await Task.Run(() => BubbleSort(Array1));
-                    ArrayToDataGrid(Array1);
-                    await Task.Run(() => InsertionSort(Array2));
-                    await Task.Run(() => CoctailSort(Array3));
-                    await Task.Run(() => QuickSort(Array4));
-                    //await Task.Run(() => BogoSort(Array5));
-                    Check();
-                }
-                else
-                {
-                    MessageBox.Show("Отключите визуализацию");
-                }
+                await Task.Run(() => BubbleSort(Array1));
+                ArrayToDataGrid(Array1);
+                await Task.Run(() => InsertionSort(Array2));
+                ArrayToDataGrid(Array2);
+                await Task.Run(() => CoctailSort(Array3));
+                ArrayToDataGrid(Array3);
+                await Task.Run(() => QuickSort(Array4));
+                ArrayToDataGrid(Array4);
+                //await Task.Run(() => BogoSort(Array5));
+                Check();
+                Visualization(chart, Array1);
             }
         }
 
-        private void DataGridToArray()
+        private void DataGridToArray(Chart c)
         {
             if (ArrayList.Count != 0)
             {
@@ -203,7 +200,7 @@ namespace Sorting
             Array4 = ArrayList.ToArray();
             Array5 = ArrayList.ToArray();
             Stopwatch SW = new Stopwatch();
-            Visualization(Array);
+            Visualization(c, Array);
 
         }
 
@@ -244,7 +241,7 @@ namespace Sorting
                         if (IsVisualized.Checked)
                         {
                             SW.Stop();
-                            Visualization(Array);
+                            Invoke(new Action(() => Visualization(bubbleChart, Array)));
                             SW.Start();
                         }
                     }
@@ -273,7 +270,7 @@ namespace Sorting
                     if (IsVisualized.Checked)
                     {
                         SW.Stop();
-                        Visualization(Array);
+                        Invoke(new Action(() => Visualization(insertionChart, Array)));
                         SW.Start();
                     }
                 }
@@ -297,12 +294,12 @@ namespace Sorting
                     if (Array[i] > Array[i + 1])
                     {
                         SW.Stop();
-                        Swap(Array, i, i + 1);
+                        Swap(coctailChart ,Array, i, i + 1);
                         SW.Start();
                         if (IsVisualized.Checked)
                         {
                             SW.Stop();
-                            Visualization(Array);
+                            Invoke(new Action(() => Visualization(coctailChart, Array)));
                             SW.Start();
                         }
                     }
@@ -313,12 +310,12 @@ namespace Sorting
                     if (Array[i - 1] > Array[i])
                     {
                         SW.Stop();
-                        Swap(Array, i - 1, i);
+                        Swap(coctailChart, Array, i - 1, i);
                         SW.Start();
                         if (IsVisualized.Checked)
                         {
                             SW.Stop();
-                            Visualization(Array);
+                            Invoke(new Action(() => Visualization(coctailChart, Array)));
                             SW.Start();
                         }
                     }
@@ -352,7 +349,7 @@ namespace Sorting
                 if (IsVisualized.Checked)
                 {
                     SW.Stop();
-                    Visualization(Array);
+                    Invoke(new Action(() => Visualization(quickChart, Array)));
                     SW.Start();
                 }
                 rightIndexOfSubset = stack.Pop();
@@ -384,7 +381,7 @@ namespace Sorting
                     if (rightIndex >= leftIndex)
                     {
                         SW.Stop();
-                        Swap(Array, leftIndex, rightIndex);
+                        Swap(quickChart, Array, leftIndex, rightIndex);
                         SW.Start();
                     }
                 }
@@ -394,7 +391,7 @@ namespace Sorting
                     if (Array[pivotIndex] > Array[rightIndex])
                     {
                         SW.Stop();
-                        Swap(Array, pivotIndex, rightIndex);
+                        Swap(quickChart, Array, pivotIndex, rightIndex);
                         SW.Start();
                     }
                 }
@@ -433,7 +430,7 @@ namespace Sorting
                     Array[Rnd] = Temp;
                     if (IsVisualized.Checked)
                     {
-                        Visualization(Array);
+                        Invoke(new Action(() => Visualization(chart, Array)));
                     }
                 }
             }
