@@ -23,32 +23,6 @@ namespace NumericalMethods
             
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {  
-            double[,] array = new double[dataGridView1.RowCount, dataGridView1.ColumnCount];
-            double[] y = new double[dataGridView2.RowCount];
-
-            for (int i = 0; i < dataGridView1.RowCount; i++)
-            {
-                for (int j = 0; j < dataGridView1.ColumnCount; j++)
-                {
-                    array[i, j] = Convert.ToDouble(dataGridView1.Rows[i].Cells[j].Value);
-                }
-            }
-
-            for (int i = 0; i < dataGridView2.RowCount; i++)
-            {
-                y[i] = Convert.ToDouble(dataGridView2.Rows[i].Cells[0].Value);
-            }
-
-            double[] x = GaussMethod(array, y);
-
-            for (int i = 0; i < dataGridView3.RowCount; i++)
-            {
-                dataGridView3.Rows[i].Cells[0].Value = x[i];
-            }
-        }
-
         private double[] GaussMethod(double[,] array, double[] y)
         {
             double[] x = new double[dataGridView1.RowCount];
@@ -119,25 +93,79 @@ namespace NumericalMethods
             return x;
         }
 
-        private void RowCount_TextChanged(object sender, EventArgs e)
+        private void Count_TextChanged(object sender, EventArgs e)
         {
-            if (RowCount.Text != "")
+            if (Count.Text != "")
             {
-                dataGridView1.RowCount = int.Parse(RowCount.Text);
-                dataGridView2.RowCount = int.Parse(RowCount.Text);
-                dataGridView3.RowCount = int.Parse(RowCount.Text);
+                dataGridView1.RowCount = int.Parse(Count.Text);
+                dataGridView2.RowCount = int.Parse(Count.Text);
+                dataGridView3.RowCount = int.Parse(Count.Text);
+                dataGridView1.ColumnCount = int.Parse(Count.Text);
+                for (int i = 0; i < dataGridView1.ColumnCount; i++)
+                {
+                    dataGridView1.Columns[i].Name = "x" + (i + 1).ToString();
+                }
             }
         }
 
-        private void ColumnCount_TextChanged(object sender, EventArgs e)
+        private void Count_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (ColumnCount.Text != "")
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && (e.KeyChar != '.'))
             {
-                dataGridView1.ColumnCount = int.Parse(ColumnCount.Text);
-                for (int i = 0; i < dataGridView1.ColumnCount; i++)
+                e.Handled = true;
+            }
+        }
+
+        private void методомГауссаToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] array = new double[dataGridView1.RowCount, dataGridView1.ColumnCount];
+            double[] y = new double[dataGridView2.RowCount];
+            int Accuracy;
+
+            if (Precision.Text != "")
+            {
+                Accuracy = Convert.ToInt32(Precision.Text);
+            }
+            else
+            {
+                Accuracy = 2;
+            }
+
+            for (int i = 0; i < dataGridView1.RowCount; i++)
+            {
+                for (int j = 0; j < dataGridView1.ColumnCount; j++)
                 {
-                    dataGridView1.Columns[i].Name = "x" + (i+1).ToString();
+                    array[i, j] = Convert.ToDouble(dataGridView1.Rows[i].Cells[j].Value);
                 }
+            }
+
+            for (int i = 0; i < dataGridView2.RowCount; i++)
+            {
+                y[i] = Convert.ToDouble(dataGridView2.Rows[i].Cells[0].Value);
+            }
+
+            double[] x = GaussMethod(array, y);
+
+            for (int i = 0; i < x.Length; i++)
+            {
+                dataGridView3.Rows[i].Cells[0].Value = Math.Round(x[i], Accuracy);
+            }
+        }
+
+        private void заполнитьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Random rnd = new Random();
+
+            for (int i = 0; i < dataGridView1.RowCount; i++)
+            {
+                for (int j = 0; j < dataGridView1.ColumnCount; j++)
+                {
+                    dataGridView1.Rows[i].Cells[j].Value = rnd.Next(-10, 10);
+                }
+            }
+            for (int i = 0; i < dataGridView2.RowCount; i++)
+            {
+                dataGridView2.Rows[i].Cells[0].Value = rnd.Next(-10, 10);
             }
         }
     }
